@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Niger Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="notification-bar">
+        <marquee behavior="scroll" direction="left" scrollamount="5">
+            🏆 Top 100 Players | Climb the ranks and win cash rewards!
+        </marquee>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <h1>🇳🇪 Niger Quiz</h1>
+                <p>🏅 Leaderboard</p>
+            </div>
+            <div class="header-actions">
+                <a href="/dashboard" class="btn-secondary btn-small">📊 Dashboard</a>
+                <a href="/quiz" class="btn-primary btn-small">▶️ Play Quiz</a>
+                <a href="/logout" class="btn-danger btn-small">🚪 Logout</a>
+            </div>
+        </header>
+
+        <!-- Top 3 Champions -->
+        <div class="champions-section">
+            <h2>🏆 Top Champions</h2>
+            <div class="champions-grid" id="championsGrid">
+                <div class="champion-card" id="secondPlace">
+                    <div class="champion-medal">🥈</div>
+                    <div class="champion-avatar">
+                        <img src="/uploads/default.png" alt="Player" id="secondAvatar">
+                    </div>
+                    <div class="champion-name" id="secondName">Loading...</div>
+                    <div class="champion-score" id="secondScore">0 pts</div>
+                    <div class="champion-rank" id="secondRank">-</div>
+                </div>
+                <div class="champion-card champion-first" id="firstPlace">
+                    <div class="champion-medal">🥇</div>
+                    <div class="champion-crown">👑</div>
+                    <div class="champion-avatar">
+                        <img src="/uploads/default.png" alt="Player" id="firstAvatar">
+                    </div>
+                    <div class="champion-name" id="firstName">Loading...</div>
+                    <div class="champion-score" id="firstScore">0 pts</div>
+                    <div class="champion-rank" id="firstRank">-</div>
+                </div>
+                <div class="champion-card" id="thirdPlace">
+                    <div class="champion-medal">🥉</div>
+                    <div class="champion-avatar">
+                        <img src="/uploads/default.png" alt="Player" id="thirdAvatar">
+                    </div>
+                    <div class="champion-name" id="thirdName">Loading...</div>
+                    <div class="champion-score" id="thirdScore">0 pts</div>
+                    <div class="champion-rank" id="thirdRank">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Leaderboard -->
+        <div class="leaderboard-section">
+            <div class="leaderboard-header">
+                <h3>📊 Top 100 Players</h3>
+                <div class="leaderboard-filters">
+                    <button onclick="loadLeaderboard()" class="btn-secondary btn-small">🔄 Refresh</button>
+                    <input type="text" id="searchInput" placeholder="🔍 Search player..." onkeyup="searchPlayer()">
+                </div>
+            </div>
+
+            <div class="leaderboard-table-container">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Country</th>
+                            <th>Score</th>
+                            <th>Rank</th>
+                            <th>Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                                ⏳ Loading players...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="leaderboard-footer">
+                <p>🏆 Updated daily | Resets every season (3 months)</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>MBAEZE.AI.QUIZ</p>
+            <p class="footer-contact">📞 +2349116285692 | 📧 mbaezechibuike7@gmail.com</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let allUsers = [];
+
+        // Load leaderboard
+        async function loadLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">⏳ Loading...</td></tr>';
+
+            try {
+                const response = await fetch('/api/leaderboard');
+                allUsers = await response.json();
+
+                if (allUsers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">No players yet. Be the first!</td></tr>';
+                    return;
+                }
+
+                // Display top 3 champions
+                displayChampions(allUsers);
+
+                // Display full table
+                displayTable(allUsers);
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #e94560;">❌ Error loading leaderboard</td></tr>`;
+                console.error('Error:', error);
+            }
+        }
+
+        // Display champions (top 3)
+        function displayChampions(users) {
+            const top3 = users.slice(0, 3);
+
+            // First place
+            if (top3[0]) {
+                document.getElementById('firstName').textContent = top3[0].username;
+                document.getElementById('firstScore').textContent = `${top3[0].score} pts`;
+                document.getElementById('firstRank').textContent = top3[0].rank;
+                document.getElementById('firstAvatar').src = `/uploads/${top3[0].profile_pic || 'default.png'}`;
+                document.getElementById('firstAvatar').onerror = function() { this.src = '/uploads/default.png'; };
+            }
+
+            // Second place
+            if (top3[1]) {
+                document.getElementById('secondName').textContent = top3[1].username;
+                document.getElementById('secondScore').textContent = `${top3[1].score} pts`;
+                document.getElementById('secondRank').textContent = top3[1].rank;
+                document.getElementById('secondAvatar').src = `/uploads/${top3[1].profile_pic || 'default.png'}`;
+                document.getElementById('secondAvatar').onerror = function() { this.src = '/uploads/default.png'; };
+            } else {
+                document.getElementById('secondName').textContent = 'No player';
+                document.getElementById('secondScore').textContent = '0 pts';
+                document.getElementById('secondRank').textContent = '-';
+            }
+
+            // Third place
+            if (top3[2]) {
+                document.getElementById('thirdName').textContent = top3[2].username;
+                document.getElementById('thirdScore').textContent = `${top3[2].score} pts`;
+                document.getElementById('thirdRank').textContent = top3[2].rank;
+                document.getElementById('thirdAvatar').src = `/uploads/${top3[2].profile_pic || 'default.png'}`;
+                document.getElementById('thirdAvatar').onerror = function() { this.src = '/uploads/default.png'; };
+            } else {
+                document.getElementById('thirdName').textContent = 'No player';
+                document.getElementById('thirdScore').textContent = '0 pts';
+                document.getElementById('thirdRank').textContent = '-';
+            }
+        }
+
+        // Display full table
+        function displayTable(users) {
+            const tbody = document.getElementById('leaderboardBody');
+            let html = '';
+
+            users.forEach((user, index) => {
+                const rank = index + 1;
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                const rankClass = user.rank.toLowerCase().replace(' ', '-');
+
+                html += `
+                    <tr class="${rank <= 3 ? 'top-rank' : ''}" onclick="viewProfile('${user.username}')">
+                        <td class="rank-column">${medal}</td>
+                        <td class="player-column">
+                            <img src="/uploads/${user.profile_pic || 'default.png'}" 
+                                 alt="${user.username}" 
+                                 class="player-avatar"
+                                 onerror="this.src='/uploads/default.png'">
+                            <span class="player-name">${user.username}</span>
+                        </td>
+                        <td class="country-column">${user.country || '🌍'}</td>
+                        <td class="score-column">${user.score.toLocaleString()}</td>
+                        <td class="rank-column"><span class="rank-badge rank-${rankClass}">${user.rank}</span></td>
+                        <td class="level-column">⭐ ${user.level}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Search player
+        function searchPlayer() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allUsers.filter(user => 
+                user.username.toLowerCase().includes(searchTerm)
+            );
+            displayTable(filtered);
+        }
+
+        // View profile
+        function viewProfile(username) {
+            window.location.href = `/profile/${username}`;
+        }
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLeaderboard();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadLeaderboard, 30000);
+        });
+    </script>
+</body>
+</html>

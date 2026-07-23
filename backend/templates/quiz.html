@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Niger Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="notification-bar">
+        <marquee behavior="scroll" direction="left" scrollamount="5">
+            📝 Answer correctly! 10 points per 5 questions | 🏆 Ranks: Bronze → Silver → Gold → Platinum → Diamond → Grand Master → Elite Master
+        </marquee>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <h1>🇳🇪 Niger Quiz</h1>
+                <p>Test Your Knowledge!</p>
+            </div>
+            <div class="header-actions">
+                <a href="/dashboard" class="btn-secondary btn-small">📊 Dashboard</a>
+                <a href="/logout" class="btn-danger btn-small">🚪 Logout</a>
+            </div>
+        </header>
+
+        <!-- Quiz Setup -->
+        <div id="quiz-setup" class="quiz-setup">
+            <h2>📝 Quiz Setup</h2>
+            <p>Select how many questions you want to answer:</p>
+            <div class="quiz-options">
+                <button onclick="startQuiz(5)" class="btn-secondary">5 Questions</button>
+                <button onclick="startQuiz(10)" class="btn-primary">10 Questions</button>
+                <button onclick="startQuiz(15)" class="btn-secondary">15 Questions</button>
+                <button onclick="startQuiz(20)" class="btn-secondary">20 Questions</button>
+                <button onclick="startQuiz(25)" class="btn-secondary">25 Questions</button>
+                <button onclick="startQuiz(30)" class="btn-secondary">30 Questions</button>
+            </div>
+            <div class="quiz-info">
+                <p>💡 <strong>How it works:</strong></p>
+                <ul>
+                    <li>Each question has 4 options (A, B, C, D)</li>
+                    <li>You earn <strong>10 points</strong> for every <strong>5 correct answers</strong></li>
+                    <li>Questions come from different difficulty levels</li>
+                    <li>You cannot answer the same question twice</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quiz Area (hidden initially) -->
+        <div id="quiz-area" style="display: none;">
+            <div class="quiz-header">
+                <div class="quiz-progress">
+                    <span id="questionCounter">Question 1 of 10</span>
+                    <span id="scoreDisplay">Score: 0</span>
+                </div>
+                <div class="quiz-timer">
+                    <span id="timerDisplay">⏱️ 00:00</span>
+                </div>
+            </div>
+
+            <div id="questionContainer" class="question-container">
+                <!-- Questions will be loaded here -->
+            </div>
+
+            <div class="quiz-actions">
+                <button onclick="submitQuiz()" class="btn-primary btn-large" id="submitBtn">Submit Answers</button>
+                <button onclick="resetQuiz()" class="btn-secondary btn-small">🔄 Restart</button>
+            </div>
+        </div>
+
+        <!-- Results Area (hidden initially) -->
+        <div id="results-area" style="display: none;">
+            <div class="results-card">
+                <h2>🎉 Quiz Complete!</h2>
+                <div class="results-stats">
+                    <div class="result-item">
+                        <span class="result-label">✅ Correct Answers</span>
+                        <span class="result-value" id="correctCount">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">❌ Incorrect Answers</span>
+                        <span class="result-value" id="incorrectCount">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">📊 Total Questions</span>
+                        <span class="result-value" id="totalCount">0</span>
+                    </div>
+                    <div class="result-item highlight">
+                        <span class="result-label">⭐ Points Earned</span>
+                        <span class="result-value" id="pointsEarned">0</span>
+                    </div>
+                    <div class="result-item highlight">
+                        <span class="result-label">🏆 Total Score</span>
+                        <span class="result-value" id="newTotalScore">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">👑 New Rank</span>
+                        <span class="result-value" id="newRank">Bronze</span>
+                    </div>
+                </div>
+
+                <div id="withdrawalAlert" style="display: none;" class="withdrawal-alert">
+                    <h3>🎉 Congratulations!</h3>
+                    <p id="withdrawalMessage">You're eligible for a withdrawal!</p>
+                    <button onclick="showWithdrawForm()" class="btn-primary">💰 Claim Reward</button>
+                </div>
+
+                <div class="results-actions">
+                    <button onclick="playAgain()" class="btn-primary">🔄 Play Again</button>
+                    <a href="/dashboard" class="btn-secondary">📊 Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal Form (hidden initially) -->
+        <div id="withdraw-form" style="display: none;" class="form-box">
+            <h3>💰 Withdrawal Request</h3>
+            <form id="withdrawForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label>Account Name *</label>
+                    <input type="text" id="accName" placeholder="Full name on bank account" required>
+                </div>
+                <div class="form-group">
+                    <label>Account Number *</label>
+                    <input type="text" id="accNumber" placeholder="Bank account number" required>
+                </div>
+                <div class="form-group">
+                    <label>Bank Name *</label>
+                    <input type="text" id="bankName" placeholder="Name of your bank" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="phoneNumber" placeholder="Your phone number" required>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Submit Withdrawal</button>
+                <button onclick="closeWithdrawForm()" class="btn-secondary btn-full" style="margin-top: 10px;">Cancel</button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>MBAEZE.AI.QUIZ</p>
+            <p class="footer-contact">📞 +2349116285692 | 📧 mbaezechibuike7@gmail.com</p>
+        </footer>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+        let selectedAnswers = {};
+        let timerInterval = null;
+        let seconds = 0;
+        let withdrawalAmount = 0;
+
+        // Start Quiz
+        async function startQuiz(count) {
+            document.getElementById('quiz-setup').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            document.getElementById('results-area').style.display = 'none';
+            
+            totalQuestions = count;
+            score = 0;
+            correctAnswers = 0;
+            selectedAnswers = {};
+            seconds = 0;
+            
+            document.getElementById('scoreDisplay').textContent = 'Score: 0';
+            document.getElementById('questionCounter').textContent = `Question 1 of ${count}`;
+            
+            // Start timer
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            try {
+                const response = await fetch(`/api/questions/${count}`);
+                questions = await response.json();
+                
+                if (questions.length === 0) {
+                    alert('❌ No questions available! Please add some questions first.');
+                    resetQuiz();
+                    return;
+                }
+                
+                displayQuestion(0);
+            } catch (error) {
+                alert('❌ Error loading questions: ' + error.message);
+                resetQuiz();
+            }
+        }
+
+        // Display Question
+        function displayQuestion(index) {
+            if (index >= questions.length) {
+                submitQuiz();
+                return;
+            }
+            
+            const q = questions[index];
+            const container = document.getElementById('questionContainer');
+            
+            // Check if this question was already answered (shouldn't happen with random selection)
+            if (selectedAnswers[index] !== undefined) {
+                // Already answered this question
+                displayQuestion(index + 1);
+                return;
+            }
+            
+            const options = ['A', 'B', 'C', 'D'];
+            let optionsHtml = '';
+            
+            q.options.forEach((opt, i) => {
+                const checked = selectedAnswers[index] === options[i] ? 'checked' : '';
+                optionsHtml += `
+                    <label class="option-label" onclick="selectOption(${index}, '${options[i]}')">
+                        <input type="radio" name="question${index}" value="${options[i]}" ${checked}>
+                        <span class="option-letter">${options[i]}</span>
+                        <span class="option-text">${opt}</span>
+                    </label>
+                `;
+            });
+            
+            container.innerHTML = `
+                <div class="question-card">
+                    <div class="question-header">
+                        <span class="question-number">Q${index + 1}/${questions.length}</span>
+                        <span class="question-level">Level ${q.level}</span>
+                    </div>
+                    <h3 class="question-text">${q.question}</h3>
+                    <div class="options-grid">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('questionCounter').textContent = `Question ${index + 1} of ${questions.length}`;
+            currentQuestionIndex = index;
+            
+            // Scroll to question
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Select Option
+        function selectOption(index, value) {
+            selectedAnswers[index] = value;
+            
+            // Update UI
+            const labels = document.querySelectorAll('.option-label');
+            labels.forEach(label => {
+                const input = label.querySelector('input');
+                if (input.value === value) {
+                    input.checked = true;
+                    label.style.borderColor = '#ffd700';
+                    label.style.background = 'rgba(255, 215, 0, 0.1)';
+                } else {
+                    label.style.borderColor = 'rgba(255,255,255,0.1)';
+                    label.style.background = 'rgba(255,255,255,0.05)';
+                }
+            });
+            
+            // Auto-advance after selecting? No, let user review
+        }
+
+        // Submit Quiz
+        async function submitQuiz() {
+            // Check if all questions are answered
+            const answered = Object.keys(selectedAnswers).length;
+            if (answered < questions.length) {
+                const confirmSubmit = confirm(`You've answered ${answered}/${questions.length} questions. Submit anyway?`);
+                if (!confirmSubmit) return;
+            }
+            
+            // Calculate results
+            correctAnswers = 0;
+            questions.forEach((q, index) => {
+                if (selectedAnswers[index] === q.correct) {
+                    correctAnswers++;
+                }
+            });
+            
+            // Calculate score (10 points per 5 questions)
+            score = Math.floor(correctAnswers / 5) * 10;
+            
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Show results
+            showResults();
+            
+            // Submit to backend
+            try {
+                const response = await fetch('/api/submit_quiz', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        score: score,
+                        correct_count: correctAnswers,
+                        total_count: questions.length
+                    })
+                });
+                const result = await response.json();
+                
+                // Update results with backend data
+                document.getElementById('newTotalScore').textContent = result.new_total;
+                document.getElementById('newRank').textContent = result.rank;
+                
+                // Check for withdrawal eligibility
+                if (result.eligible) {
+                    withdrawalAmount = result.amount;
+                    document.getElementById('withdrawalAlert').style.display = 'block';
+                    document.getElementById('withdrawalMessage').textContent = 
+                        `🎉 You're eligible for ₦${result.amount} withdrawal! Fill the form to claim.`;
+                }
+                
+                // Update scores in results
+                document.getElementById('pointsEarned').textContent = score;
+                
+            } catch (error) {
+                // Still show results even if backend fails
+                document.getElementById('newTotalScore').textContent = 'Update failed';
+                document.getElementById('newRank').textContent = 'Check dashboard';
+            }
+        }
+
+        // Show Results
+        function showResults() {
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('results-area').style.display = 'block';
+            
+            const incorrect = questions.length - correctAnswers;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('incorrectCount').textContent = incorrect;
+            document.getElementById('totalCount').textContent = questions.length;
+            document.getElementById('pointsEarned').textContent = score;
+            
+            // Scroll to results
+            document.getElementById('results-area').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show Withdraw Form
+        function showWithdrawForm() {
+            document.getElementById('withdraw-form').style.display = 'block';
+            document.getElementById('withdrawalAlert').style.display = 'none';
+        }
+
+        // Close Withdraw Form
+        function closeWithdrawForm() {
+            document.getElementById('withdraw-form').style.display = 'none';
+        }
+
+        // Handle Withdrawal Form Submission
+        document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                amount: withdrawalAmount,
+                account_name: document.getElementById('accName').value.trim(),
+                account_number: document.getElementById('accNumber').value.trim(),
+                bank_name: document.getElementById('bankName').value.trim(),
+                phone: document.getElementById('phoneNumber').value.trim()
+            };
+            
+            // Validate
+            if (!data.account_name || !data.account_number || !data.bank_name || !data.phone) {
+                alert('❌ Please fill in all fields!');
+                return;
+            }
+            
+            if (data.account_number.length < 10) {
+                alert('❌ Please enter a valid account number!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/withdraw', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Withdrawal request submitted successfully!\nWe will process it and contact you on WhatsApp.');
+                    document.getElementById('withdrawForm').reset();
+                    document.getElementById('withdraw-form').style.display = 'none';
+                } else {
+                    alert('❌ ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error submitting withdrawal: ' + error.message);
+            }
+        });
+
+        // Update Timer
+        function updateTimer() {
+            seconds++;
+            const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `⏱️ ${mins}:${secs}`;
+        }
+
+        // Play Again
+        function playAgain() {
+            document.getElementById('results-area').style.display = 'none';
+            document.getElementById('quiz-setup').style.display = 'block';
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('withdraw-form').style.display = 'none';
+            document.getElementById('withdrawalAlert').style.display = 'none';
+            
+            questions = [];
+            selectedAnswers = {};
+            currentQuestionIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            seconds = 0;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // Reset Quiz (emergency)
+        function resetQuiz() {
+            playAgain();
+        }
+    </script>
+</body>
+</html>
